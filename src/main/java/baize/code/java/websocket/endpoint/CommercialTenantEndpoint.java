@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @ServerEndpoint(value = "/commercialTenant/chat/{ctId}",decoders = ChatMessageCoder.class, encoders = ChatMessageCoder.class)
 public class CommercialTenantEndpoint implements WebSocketEndpoint {
+
     private static final ConcurrentHashMap<Integer, CommercialTenantEndpoint> commercialTenantEndpointConcurrentEndpointPool = new ConcurrentHashMap<>();
 
     private Session session;
@@ -86,7 +87,7 @@ public class CommercialTenantEndpoint implements WebSocketEndpoint {
         return SessionLog.Type.COMMERCIAL_TENANT;
     }
 
-    public static CommercialTenantEndpoint findEndPoint(Integer userId) {
-        return commercialTenantEndpointConcurrentEndpointPool.get(userId);
+    public static CommercialTenantEndpoint findEndPoint(Integer ctId) {
+        return commercialTenantEndpointConcurrentEndpointPool.get(ctId);
     }
 }

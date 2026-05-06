@@ -1,5 +1,6 @@
 package baize.code.java.websocket.endpoint;
 
+import baize.code.java.ai.service.AIService;
 import baize.code.java.config.ChatMessageCoder;
 import baize.code.java.mapper.SessionLogMapper;
 import baize.code.java.service.SessionService;
@@ -27,12 +28,14 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
     private static SessionService sessionService;
     private static SessionLogMapper sessionLogMapper;
     private static SessionFind sessionFind;
+    private static AIService aiService;
 
     @Autowired
-    public void setDependencies(SessionService sessionService,SessionLogMapper sessionLogMapper,SessionFind sessionFind){
+    public void setDependencies(SessionService sessionService,SessionLogMapper sessionLogMapper,SessionFind sessionFind,AIService aiService){
         UserServiceEndpoint.sessionService = sessionService;
         UserServiceEndpoint.sessionLogMapper = sessionLogMapper;
         UserServiceEndpoint.sessionFind = sessionFind;
+        UserServiceEndpoint.aiService = aiService;
     }
 
 
@@ -59,6 +62,32 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
         switch (chatSession.getConversationStatus()){
             case AI -> {
                 // 判断当前用户是否要转人工
+                aiService.turnToManualJudgement(chatSession,message);
+
+                // 转人工服务
+                if(chatSession.getConversationStatus() == baize.code.java.entity.Session.ConversationStatus.HUMAN){
+                    // 提示消息
+                    ChatMessage tipMsg = new ChatMessage();
+                    tipMsg.setType( SessionLog.Type.SYSTEM);
+                    tipMsg.setSessionId(chatSession.getId());
+                    tipMsg.setCtId(chatSession.getCtId());
+                    tipMsg.setGoodsId(chatSession.getGoodsId());
+                    tipMsg.setMessage("已为您转接人工客服，请等待客服回复");
+                    sendMessage(tipMsg);
+                    // 保存数据库
+                    sessionLogMapper.insert(SessionLog.builder()
+                                    .type(tipMsg.getType())
+                                    .sessionId(tipMsg.getSessionId())
+                                    .content(tipMsg.getMessage())
+                                    .build());
+                    //找人工端点
+                    CommercialTenantEndpoint ctEndPoint = sessionFind.findCommercialTenantEndPoint(chatSession.getId());
+                    if(ctEndPoint != null){
+                        ctEndPoint.sendMessage(message);
+                    }
+                }else {
+
+                }
             }
             case HUMAN -> {
                 sessionLogMapper.insert(SessionLog.builder()
