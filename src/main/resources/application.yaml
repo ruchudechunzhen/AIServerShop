@@ -13,8 +13,8 @@ spring:
     dashscope:
       chat:
         options:
-          model: qwen3.6-plus # 聊天模型
-      api-key: sk-c1567448faf147e8b2ec11624b1cbe6c # 密钥
+          model: qwen3.6-max-preview # 聊天模型
+      api-key: sk-9c62f1d5859d4933a2d22deaa8b42c08 # 密钥
       embedding:
         options:
           model: text-embedding-v4 # 向量模型

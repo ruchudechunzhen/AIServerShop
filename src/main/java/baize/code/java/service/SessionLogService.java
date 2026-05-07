@@ -3,6 +3,7 @@ package baize.code.java.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import baize.code.java.common.Result;
 import baize.code.java.entity.SessionLog;
+import org.springframework.ai.chat.messages.Message;
 
 import java.util.List;
 
@@ -18,4 +19,10 @@ public interface SessionLogService extends IService<SessionLog> {
     Result<Integer> userGetUnreadMessageCount(Integer sessionId);
 
     Result<Integer> ctGetUnreadMessageCount(Integer sessionId);
+
+    List<SessionLog> getSessionLogById(Integer sessionId);
+
+    void addToRedis(Integer conversationId, List<SessionLog> sessionLogList);
+
+    void addSessionLog(String conversationId, List<Message> messages);
 }

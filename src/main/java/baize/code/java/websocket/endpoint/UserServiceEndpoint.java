@@ -55,7 +55,7 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
 
     // TODO:005
     @OnMessage
-    public void onMessage(ChatMessage message, Session session) throws EncodeException, IOException {
+    public void onMessage(ChatMessage message, Session session) throws EncodeException, IOException, IllegalAccessException {
         message.setType(getEndpointType());
         // 向商户发送信息
         baize.code.java.entity.Session chatSession = sessionService.find(message, userId, this);
@@ -86,7 +86,8 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
                         ctEndPoint.sendMessage(message);
                     }
                 }else {
-
+                    // AI客服
+                    aiService.chat(chatSession,message,this);
                 }
             }
             case HUMAN -> {
@@ -102,10 +103,6 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
                 }
             }
         }
-
-        CommercialTenantEndpoint endPoint = CommercialTenantEndpoint.findEndPoint(1);
-        endPoint.sendMessage(message);
-
     }
 
     @OnError
