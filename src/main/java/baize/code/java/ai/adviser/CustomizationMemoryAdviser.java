@@ -42,6 +42,9 @@ public class CustomizationMemoryAdviser implements BaseChatMemoryAdvisor {
         //4redis中没有，从mysql中查询记录
         //5将查询结果放入redis中
         List<Message> messages = customizationMemory.get(conversationId);
+
+        UserMessage userMessage111 = chatClientRequest.prompt().getUserMessage();
+        System.out.println("userMessage1111111111"+userMessage111);
         //6将查询到的记忆整合到prompt中
         // 把message中的信息去取出来，拼接成完整的一段话
         String memory = messages.stream().filter(
@@ -60,6 +63,7 @@ public class CustomizationMemoryAdviser implements BaseChatMemoryAdvisor {
                 .build();
         // 获取用户的本次对话，保存数据库
         UserMessage userMessage = chatClientRequest.prompt().getUserMessage();
+        System.out.println("userMessage2222222"+userMessage);
         this.customizationMemory.add(conversationId, userMessage);
         //7返回整合后的的prompt
         return processChatClientRequest;
@@ -80,7 +84,7 @@ public class CustomizationMemoryAdviser implements BaseChatMemoryAdvisor {
         }
         StringBuilder content = new StringBuilder();
         for (Generation result :chatResponse.getResults()){
-            content.append(result);
+            content.append(result.getOutput().getText());
         }
         AssistantMessage assistantMessage = new AssistantMessage(content.toString());
         //将AI返回的消息存储在本地

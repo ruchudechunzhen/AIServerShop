@@ -1,5 +1,6 @@
 package baize.code.java.websocket.endpoint;
 
+import baize.code.java.ai.adviser.RAGAdvisor;
 import baize.code.java.ai.service.AIService;
 import baize.code.java.config.ChatMessageCoder;
 import baize.code.java.mapper.SessionLogMapper;
@@ -29,6 +30,7 @@ public class UserServiceEndpoint implements WebSocketEndpoint {
     private static SessionLogMapper sessionLogMapper;
     private static SessionFind sessionFind;
     private static AIService aiService;
+
 
     @Autowired
     public void setDependencies(SessionService sessionService,SessionLogMapper sessionLogMapper,SessionFind sessionFind,AIService aiService){

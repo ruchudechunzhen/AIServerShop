@@ -19,6 +19,9 @@ spring:
         options:
           model: text-embedding-v4 # 向量模型
           dimensions: 2048 # 向量维度
+      rerank:
+        options:
+          model: qwen3-rerank #重排序模型
     vectorstore:
       milvus:
         client:

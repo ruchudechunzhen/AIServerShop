@@ -146,6 +146,7 @@ public class SessionLogServiceImpl extends ServiceImpl<SessionLogMapper, Session
                     .type(sessionType)
                     .build();
         }).toList();
+        System.out.println("sessionLogList333333"+sessionLogList);
         saveBatch(sessionLogList);
         addToRedis(Integer.valueOf(conversationId),sessionLogList);
     }

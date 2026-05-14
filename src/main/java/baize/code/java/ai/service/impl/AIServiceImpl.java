@@ -1,6 +1,7 @@
 package baize.code.java.ai.service.impl;
 
 import baize.code.java.ai.adviser.CustomizationMemoryAdviser;
+import baize.code.java.ai.adviser.RAGAdvisor;
 import baize.code.java.ai.service.AIService;
 import baize.code.java.entity.Role;
 import baize.code.java.entity.Session;
@@ -11,6 +12,7 @@ import baize.code.java.utils.KeyUtils;
 import baize.code.java.websocket.endpoint.UserServiceEndpoint;
 import baize.code.java.websocket.message.ChatMessage;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import jakarta.websocket.EncodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -18,7 +20,13 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.template.st.StTemplateRenderer;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -30,6 +38,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+
+import static baize.code.java.code.DocumentCode.GOODS_ID;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +59,9 @@ public class AIServiceImpl implements AIService {
     private RoleService roleService;
 
     @Autowired
+    private RAGAdvisor ragAdvisor;
+
+    @Autowired
     private CustomizationMemoryAdviser customizationMemoryAdviser;
 
     @Value("classpath:template/customer-service-role.st")
@@ -59,6 +72,20 @@ public class AIServiceImpl implements AIService {
     @Value("${session.expiration-duration}")
     private long sessionExpireTime;
 
+    @jakarta.annotation.Resource
+    private VectorStore vectorStore;
+
+    @Value("classpath:template/relevant-information-cannot-be-retrieved.st")
+    private Resource relevantInformationCannotBeRetrievedResource;
+
+    @Autowired
+    private DashScopeChatModel dashScopeChatModel;
+
+    @Value("${retrieval.threshold}")
+    private Double retrievalThreshold;
+
+    @Value("${retrieval.number}")
+    private Integer retrievalNum;
 
     @Value("classpath:template/convert-to-manual-judgment-prompts.st")
     private Resource contextResource;//转人工的提示词资源
@@ -118,7 +145,11 @@ public class AIServiceImpl implements AIService {
                         promptTemplate.render(pos))
                 .user(message.getMessage())
                 .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, chatSession.getId()))
-                .advisors(customizationMemoryAdviser)
+//                .advisors(customizationMemoryAdviser)
+                //.advisors(customizationMemoryAdviser,ragAdvisor.createRAGAdvisor(chatSession.getGoodsId().toString()))
+                .advisors(customizationMemoryAdviser,
+                        ragAdvisor.createAugmentationAdvisor(chatSession.getGoodsId().toString()),
+                        ragAdvisor.createRerankAdvisor())
                 .stream().chatResponse();
 
         chatResponseFlux.toIterable().forEach(chatResponseItem -> {

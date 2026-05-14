@@ -45,7 +45,7 @@ public class ChineseTokenTextSplitter extends TextSplitter {
 
     public static ChineseTokenTextSplitter quicklyBuilder(){
         return ChineseTokenTextSplitter.builder()
-                .withChunkSize(512)
+                .withChunkSize(50)
                 .withKeepSeparator(false)
                 .build();
     }
